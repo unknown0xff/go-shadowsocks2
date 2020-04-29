@@ -23,7 +23,7 @@ func start_goShadowsocks(ClientAddr *C. char, ServerAddr *C.char, Cipher *C.char
 
 	var key []byte
 
-	ciph, err := core.PickCipher(C.GoStrng(Cipher), key, C.GoString(Password))
+	ciph, err := core.PickCipher(C.GoString(Cipher), key, C.GoString(Password))
 	if err != nil {
 	}
 
