@@ -1,8 +1,9 @@
-module github.com/shadowsocks/go-shadowsocks2
+module github.com/TheWanderingCoel/go-shadowsocks2
 
 go 1.12
 
 require (
+	github.com/aead/chacha20 v0.0.0-20180709150244-8b13a72661da
 	github.com/riobard/go-bloom v0.0.0-20200213042214-218e1707c495
 	golang.org/x/crypto v0.0.0-20200128174031-69ecbb4d6d5d
 )

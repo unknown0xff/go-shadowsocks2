@@ -1,6 +1,7 @@
-package main
+package shadowsocks
 
 import (
+	"context"
 	"io"
 	"net"
 	"time"
@@ -8,26 +9,20 @@ import (
 	"github.com/TheWanderingCoel/go-shadowsocks2/socks"
 )
 
-// Create a SOCKS server listening on addr and proxy to server.
-func socksLocal(addr, server string, shadow func(net.Conn) net.Conn) {
-	logf("SOCKS proxy %s <-> %s", addr, server)
-	tcpLocal(addr, server, shadow, func(c net.Conn) (socks.Addr, error) { return socks.Handshake(c) })
-}
+var (
+	l net.Listener
+)
 
-// Create a TCP tunnel from addr to target via server.
-func tcpTun(addr, server, target string, shadow func(net.Conn) net.Conn) {
-	tgt := socks.ParseAddr(target)
-	if tgt == nil {
-		logf("invalid target address %q", target)
-		return
-	}
-	logf("TCP tunnel %s <-> %s <-> %s", addr, server, target)
-	tcpLocal(addr, server, shadow, func(net.Conn) (socks.Addr, error) { return tgt, nil })
+// Create a SOCKS server listening on addr and proxy to server.
+func socksLocal(addr, server string, shadow func(net.Conn) net.Conn, ctx context.Context) {
+	logf("SOCKS proxy %s <-> %s", addr, server)
+	tcpLocal(addr, server, ctx, shadow, func(c net.Conn) (socks.Addr, error) { return socks.Handshake(c) })
 }
 
 // Listen on addr and proxy to server to reach target from getAddr.
-func tcpLocal(addr, server string, shadow func(net.Conn) net.Conn, getAddr func(net.Conn) (socks.Addr, error)) {
-	l, err := net.Listen("tcp", addr)
+func tcpLocal(addr, server string, ctx context.Context, shadow func(net.Conn) net.Conn, getAddr func(net.Conn) (socks.Addr, error)) {
+	var err error
+	l, err = net.Listen("tcp", addr)
 	if err != nil {
 		logf("failed to listen on %s: %v", addr, err)
 		return
@@ -37,7 +32,12 @@ func tcpLocal(addr, server string, shadow func(net.Conn) net.Conn, getAddr func(
 		c, err := l.Accept()
 		if err != nil {
 			logf("failed to accept: %s", err)
-			continue
+			select {
+				case <-ctx.Done():
+					return
+			default:
+				continue
+			}
 		}
 
 		go func() {
@@ -90,51 +90,9 @@ func tcpLocal(addr, server string, shadow func(net.Conn) net.Conn, getAddr func(
 	}
 }
 
-// Listen on addr for incoming connections.
-func tcpRemote(addr string, shadow func(net.Conn) net.Conn) {
-	l, err := net.Listen("tcp", addr)
-	if err != nil {
-		logf("failed to listen on %s: %v", addr, err)
-		return
-	}
-
-	logf("listening TCP on %s", addr)
-	for {
-		c, err := l.Accept()
-		if err != nil {
-			logf("failed to accept: %v", err)
-			continue
-		}
-
-		go func() {
-			defer c.Close()
-			c.(*net.TCPConn).SetKeepAlive(true)
-			c = shadow(c)
-
-			tgt, err := socks.ReadAddr(c)
-			if err != nil {
-				logf("failed to get target address: %v", err)
-				return
-			}
-
-			rc, err := net.Dial("tcp", tgt.String())
-			if err != nil {
-				logf("failed to connect to target: %v", err)
-				return
-			}
-			defer rc.Close()
-			rc.(*net.TCPConn).SetKeepAlive(true)
-
-			logf("proxy %s <-> %s", c.RemoteAddr(), tgt)
-			_, _, err = relay(c, rc)
-			if err != nil {
-				if err, ok := err.(net.Error); ok && err.Timeout() {
-					return // ignore i/o timeout
-				}
-				logf("relay error: %v", err)
-			}
-		}()
-	}
+// Close Tcp Local Port
+func closeTcpLocal() {
+	l.Close()
 }
 
 // relay copies between left and right bidirectionally. Returns number of

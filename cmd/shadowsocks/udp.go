@@ -1,6 +1,7 @@
-package main
+package shadowsocks
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"time"
@@ -16,6 +17,10 @@ const (
 	remoteServer mode = iota
 	relayClient
 	socksClient
+)
+
+var (
+	c net.PacketConn
 )
 
 const udpBufSize = 64 * 1024
@@ -75,14 +80,15 @@ func udpLocal(laddr, server, target string, shadow func(net.PacketConn) net.Pack
 }
 
 // Listen on laddr for Socks5 UDP packets, encrypt and send to server to reach target.
-func udpSocksLocal(laddr, server string, shadow func(net.PacketConn) net.PacketConn) {
+func udpSocksLocal(laddr, server string, shadow func(net.PacketConn) net.PacketConn, ctx context.Context) {
+	var err error
 	srvAddr, err := net.ResolveUDPAddr("udp", server)
 	if err != nil {
 		logf("UDP server address error: %v", err)
 		return
 	}
 
-	c, err := net.ListenPacket("udp", laddr)
+	c, err = net.ListenPacket("udp", laddr)
 	if err != nil {
 		logf("UDP local listen error: %v", err)
 		return
@@ -96,7 +102,12 @@ func udpSocksLocal(laddr, server string, shadow func(net.PacketConn) net.PacketC
 		n, raddr, err := c.ReadFrom(buf)
 		if err != nil {
 			logf("UDP local read error: %v", err)
-			continue
+			select {
+				case <-ctx.Done():
+					return
+					default:
+						continue
+			}
 		}
 
 		pc := nm.Get(raddr.String())
@@ -117,6 +128,11 @@ func udpSocksLocal(laddr, server string, shadow func(net.PacketConn) net.PacketC
 			continue
 		}
 	}
+}
+
+// Close Udp Local Port
+func closeUdpLocal() {
+	c.Close()
 }
 
 // Listen on addr for encrypted packets and basically do UDP NAT.
