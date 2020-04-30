@@ -14,7 +14,7 @@ var (
 	cancel  context.CancelFunc
 )
 
-func start_goShadowsocks(ClientAddr *C. char, ServerAddr *C.char, Cipher *C.char, Password *C.char, Plugin *C.char, PluginOptions *C.char) {
+func StartGoShadowsocks(ClientAddr *C. char, ServerAddr *C.char, Cipher *C.char, Password *C.char, Plugin *C.char, PluginOptions *C.char) {
 
 	var err error
 	addr := C.GoString(ServerAddr)
@@ -38,7 +38,7 @@ func start_goShadowsocks(ClientAddr *C. char, ServerAddr *C.char, Cipher *C.char
 
 }
 
-func stop_goShadowsocks() {
+func StopGoShadowsocks() {
 	killPlugin()
 
 	closeTcpLocal()
