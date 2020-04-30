@@ -1,8 +1,7 @@
 package shadowsocks
 
+import "C"
 import (
-	"C"
-
 	"context"
 
 	"github.com/TheWanderingCoel/go-shadowsocks2/core"
@@ -14,27 +13,27 @@ var (
 	cancel  context.CancelFunc
 )
 
-func StartGoShadowsocks(ClientAddr *C. char, ServerAddr *C.char, Cipher *C.char, Password *C.char, Plugin *C.char, PluginOptions *C.char) {
+func StartGoShadowsocks(ClientAddr string, ServerAddr string, Cipher string, Password string, Plugin string, PluginOptions string) {
 
 	var err error
-	addr := C.GoString(ServerAddr)
+	addr := ServerAddr
 
 	ctx, cancel = context.WithCancel(context.Background())
 
 	var key []byte
 
-	ciph, err := core.PickCipher(C.GoString(Cipher), key, C.GoString(Password))
+	ciph, err := core.PickCipher(Cipher, key, Password)
 	if err != nil {
 	}
 
-	if C.GoString(Plugin) != "" {
-		addr, err = startPlugin(C.GoString(Plugin), C.GoString(PluginOptions), addr, false)
+	if Plugin != "" {
+		addr, err = startPlugin(Plugin, PluginOptions, addr, false)
 		if err != nil {
 		}
 	}
 
-	go socksLocal(C.GoString(ClientAddr), addr, ciph.StreamConn, ctx)
-	go udpSocksLocal(C.GoString(ClientAddr), addr, ciph.PacketConn, ctx)
+	go socksLocal(ClientAddr, addr, ciph.StreamConn, ctx)
+	go udpSocksLocal(ClientAddr, addr, ciph.PacketConn, ctx)
 
 }
 
