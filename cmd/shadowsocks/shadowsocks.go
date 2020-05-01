@@ -5,12 +5,11 @@ import (
 	"context"
 
 	"github.com/TheWanderingCoel/go-shadowsocks2/core"
-
 )
 
 var (
-	ctx     context.Context
-	cancel  context.CancelFunc
+	ctx    context.Context
+	cancel context.CancelFunc
 )
 
 func StartGoShadowsocks(ClientAddr string, ServerAddr string, Cipher string, Password string, Plugin string, PluginOptions string) {
@@ -39,6 +38,8 @@ func StartGoShadowsocks(ClientAddr string, ServerAddr string, Cipher string, Pas
 
 func StopGoShadowsocks() {
 	killPlugin()
+
+	cancel()
 
 	closeTcpLocal()
 	closeUdpLocal()
