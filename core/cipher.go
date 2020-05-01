@@ -32,7 +32,7 @@ const (
 	aeadAes192Gcm         = "AEAD_AES_192_GCM"
 	aeadAes256Gcm         = "AEAD_AES_256_GCM"
 	aeadChacha20Poly1305  = "AEAD_CHACHA20_POLY1305"
-	aeadXChacha20Poly1305  = "AEAD_XCHACHA20_POLY1305"
+	aeadXChacha20Poly1305 = "AEAD_XCHACHA20_POLY1305"
 )
 
 // List of AEAD ciphers: key size in bytes and constructor
@@ -40,10 +40,10 @@ var aeadList = map[string]struct {
 	KeySize int
 	New     func([]byte) (shadowaead.Cipher, error)
 }{
-	aeadAes128Gcm:        {16, shadowaead.AESGCM},
-	aeadAes192Gcm:        {24, shadowaead.AESGCM},
-	aeadAes256Gcm:        {32, shadowaead.AESGCM},
-	aeadChacha20Poly1305: {32, shadowaead.Chacha20Poly1305},
+	aeadAes128Gcm:         {16, shadowaead.AESGCM},
+	aeadAes192Gcm:         {24, shadowaead.AESGCM},
+	aeadAes256Gcm:         {32, shadowaead.AESGCM},
+	aeadChacha20Poly1305:  {32, shadowaead.Chacha20Poly1305},
 	aeadXChacha20Poly1305: {32, shadowaead.XChacha20Poly1305},
 }
 
@@ -106,6 +106,17 @@ func PickCipher(name string, key []byte, password string) (Cipher, error) {
 		return &aeadCipher{aead}, err
 	}
 
+	if choice, ok := streamList[name]; ok {
+		if len(key) == 0 {
+			key = kdf(password, choice.KeySize)
+		}
+		if len(key) != choice.KeySize {
+			return nil, shadowstream.KeySizeError(choice.KeySize)
+		}
+		ciph, err := choice.New(key)
+		return &streamCipher{ciph}, err
+	}
+
 	return nil, ErrCipherNotSupported
 }
 
@@ -114,6 +125,13 @@ type aeadCipher struct{ shadowaead.Cipher }
 func (aead *aeadCipher) StreamConn(c net.Conn) net.Conn { return shadowaead.NewConn(c, aead) }
 func (aead *aeadCipher) PacketConn(c net.PacketConn) net.PacketConn {
 	return shadowaead.NewPacketConn(c, aead)
+}
+
+type streamCipher struct{ shadowstream.Cipher }
+
+func (ciph *streamCipher) StreamConn(c net.Conn) net.Conn { return shadowstream.NewConn(c, ciph) }
+func (ciph *streamCipher) PacketConn(c net.PacketConn) net.PacketConn {
+	return shadowstream.NewPacketConn(c, ciph)
 }
 
 // dummy cipher does not encrypt
