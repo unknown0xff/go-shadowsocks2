@@ -7,7 +7,7 @@ import (
 	"net"
 	"sync"
 
-	"github.com/TheWanderingCoel/go-shadowsocks2/internal"
+	"github.com/Trojan-Qt5/go-shadowsocks2/internal"
 )
 
 // ErrShortPacket means that the packet is too short for a valid encrypted packet.

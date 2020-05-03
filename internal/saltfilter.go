@@ -7,7 +7,7 @@ import (
 )
 
 // Those suggest value are all set according to
-// https://github.com/TheWanderingCoel/shadowsocks-org/issues/44#issuecomment-281021054
+// https://github.com/Trojan-Qt5/shadowsocks-org/issues/44#issuecomment-281021054
 // Due to this package contains various internal implementation so const named with DefaultBR prefix
 const (
 	DefaultSFCapacity = 1e6

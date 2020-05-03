@@ -6,7 +6,7 @@ import (
 	"net"
 	"time"
 
-	"github.com/TheWanderingCoel/go-shadowsocks2/socks"
+	"github.com/Trojan-Qt5/go-shadowsocks2/socks"
 )
 
 var (
