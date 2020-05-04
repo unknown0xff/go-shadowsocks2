@@ -114,7 +114,7 @@ func relay(left, right net.Conn, meter stat.TrafficMeter) (int64, int64, error) 
 	}()
 
 	n, err := io.Copy(left, right)
-	meter.Count(uint64(n), n)
+	meter.Count(0, uint64(n))
 	right.SetDeadline(time.Now()) // wake up the other goroutine blocking on right
 	left.SetDeadline(time.Now())  // wake up the other goroutine blocking on left
 	rs := <-ch
