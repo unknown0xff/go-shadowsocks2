@@ -20,7 +20,7 @@ type ClientAPIService struct {
 }
 
 func (s *ClientAPIService) QueryStats(ctx context.Context, req *StatsRequest) (*StatsReply, error) {
-	sent, recv := s.meter.Query("")
+	sent, recv := s.meter.Query()
 	reply := &StatsReply{
 		UploadTraffic:   sent,
 		DownloadTraffic: recv,
@@ -33,7 +33,7 @@ func (s *ClientAPIService) QueryStats(ctx context.Context, req *StatsRequest) (*
 func (s *ClientAPIService) calcSpeed() {
 	select {
 	case <-time.After(time.Second):
-		sent, recv := s.meter.Query("")
+		sent, recv := s.meter.Query()
 		s.uploadSpeed = sent - s.lastSent
 		s.downloadSpeed = recv - s.lastRecv
 	case <-s.ctx.Done():
