@@ -33,7 +33,7 @@ func StartGoShadowsocks(ClientAddr string, ServerAddr string, Cipher string, Pas
 		}
 	}
 
-	meter = &stat.MemoryTrafficMeter{}
+	meter := &stat.MemoryTrafficMeter{}
 
 	if EnableAPI {
 		go api.RunClientAPIService(ctx, APIAddress, meter)
