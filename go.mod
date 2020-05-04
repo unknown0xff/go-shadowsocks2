@@ -4,8 +4,10 @@ go 1.12
 
 require (
 	github.com/aead/chacha20 v0.0.0-20180709150244-8b13a72661da
+	github.com/golang/protobuf v1.4.0 // indirect
 	github.com/riobard/go-bloom v0.0.0-20200213042214-218e1707c495
 	golang.org/x/crypto v0.0.0-20200128174031-69ecbb4d6d5d
+	google.golang.org/grpc v1.29.1 // indirect
 )
 
 replace (

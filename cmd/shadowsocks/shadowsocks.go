@@ -4,7 +4,9 @@ import "C"
 import (
 	"context"
 
+	"github.com/Trojan-Qt5/go-shadowsocks2/api"
 	"github.com/Trojan-Qt5/go-shadowsocks2/core"
+	"github.com/Trojan-Qt5/go-shadowsocks2/stat"
 )
 
 var (
@@ -12,7 +14,7 @@ var (
 	cancel context.CancelFunc
 )
 
-func StartGoShadowsocks(ClientAddr string, ServerAddr string, Cipher string, Password string, Plugin string, PluginOptions string) {
+func StartGoShadowsocks(ClientAddr string, ServerAddr string, Cipher string, Password string, Plugin string, PluginOptions string, EnableAPI bool, APIAddress string) {
 
 	var err error
 	addr := ServerAddr
@@ -31,7 +33,13 @@ func StartGoShadowsocks(ClientAddr string, ServerAddr string, Cipher string, Pas
 		}
 	}
 
-	go socksLocal(ClientAddr, addr, ciph.StreamConn, ctx)
+	meter = &stat.MemoryTrafficMeter{}
+
+	if EnableAPI {
+		go api.RunClientAPIService(ctx, APIAddress, meter)
+	}
+
+	go socksLocal(ClientAddr, addr, meter, ciph.StreamConn, ctx)
 	go udpSocksLocal(ClientAddr, addr, ciph.PacketConn, ctx)
 
 }

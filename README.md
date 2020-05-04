@@ -142,3 +142,7 @@ The code base strives to
 - be idiomatic Go and well organized;
 - use fewer external dependences as reasonably possible;
 - only include proven modern ciphers;
+
+## Acknowledgement
+
+- [trojan-go](https://github.com/p4gefau1t/trojan-go) GPL-3.0
