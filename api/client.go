@@ -10,7 +10,7 @@ import (
 )
 
 type ClientAPIService struct {
-	TrojanServiceServer
+	SSServiceServer
 	meter         stat.TrafficMeter
 	uploadSpeed   uint64
 	downloadSpeed uint64
