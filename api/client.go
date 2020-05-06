@@ -31,13 +31,17 @@ func (s *ClientAPIService) QueryStats(ctx context.Context, req *StatsRequest) (*
 }
 
 func (s *ClientAPIService) calcSpeed() {
-	select {
-	case <-time.After(time.Second):
-		sent, recv := s.meter.Query()
-		s.uploadSpeed = sent - s.lastSent
-		s.downloadSpeed = recv - s.lastRecv
-	case <-s.ctx.Done():
-		return
+	for {
+		select {
+		case <-time.After(time.Second):
+			sent, recv := s.meter.Query()
+			s.uploadSpeed = sent - s.lastSent
+			s.downloadSpeed = recv - s.lastRecv
+			s.lastSent = sent
+			s.lastRecv = recv
+		case <-s.ctx.Done():
+			return
+		}
 	}
 }
 
