@@ -14,6 +14,23 @@ var (
 	l net.Listener
 )
 
+type RecordConn struct {
+	net.Conn
+	meter stat.TrafficMeter
+}
+
+func (c *RecordConn) Read(b []byte) (int, error) {
+	n, err := c.Conn.Read(b)
+	c.meter.Count(0, uint64(n))
+	return n, err
+}
+
+func (c *RecordConn) Write(b []byte) (int, error) {
+	n, err := c.Conn.Write(b)
+	c.meter.Count(uint64(n), 0)
+	return n, err
+}
+
 // Create a SOCKS server listening on addr and proxy to server.
 func socksLocal(addr, server string, meter stat.TrafficMeter, shadow func(net.Conn) net.Conn, ctx context.Context) {
 	logf("SOCKS proxy %s <-> %s", addr, server)
@@ -34,8 +51,8 @@ func tcpLocal(addr, server string, ctx context.Context, meter stat.TrafficMeter,
 		if err != nil {
 			logf("failed to accept: %s", err)
 			select {
-				case <-ctx.Done():
-					return
+			case <-ctx.Done():
+				return
 			default:
 				continue
 			}
@@ -80,7 +97,11 @@ func tcpLocal(addr, server string, ctx context.Context, meter stat.TrafficMeter,
 			}
 
 			logf("proxy %s <-> %s <-> %s", c.RemoteAddr(), server, tgt)
-			_, _, err = relay(rc, c, meter)
+			recordConn := &RecordConn{
+				Conn:  rc,
+				meter: meter,
+			}
+			_, _, err = relay(recordConn, c)
 			if err != nil {
 				if err, ok := err.(net.Error); ok && err.Timeout() {
 					return // ignore i/o timeout
@@ -98,7 +119,7 @@ func closeTcpLocal() {
 
 // relay copies between left and right bidirectionally. Returns number of
 // bytes copied from right to left, from left to right, and any error occurred.
-func relay(left, right net.Conn, meter stat.TrafficMeter) (int64, int64, error) {
+func relay(left, right net.Conn) (int64, int64, error) {
 	type res struct {
 		N   int64
 		Err error
@@ -107,14 +128,12 @@ func relay(left, right net.Conn, meter stat.TrafficMeter) (int64, int64, error) 
 
 	go func() {
 		n, err := io.Copy(right, left)
-		meter.Count(uint64(n), 0)
 		right.SetDeadline(time.Now()) // wake up the other goroutine blocking on right
 		left.SetDeadline(time.Now())  // wake up the other goroutine blocking on left
 		ch <- res{n, err}
 	}()
 
 	n, err := io.Copy(left, right)
-	meter.Count(0, uint64(n))
 	right.SetDeadline(time.Now()) // wake up the other goroutine blocking on right
 	left.SetDeadline(time.Now())  // wake up the other goroutine blocking on left
 	rs := <-ch
