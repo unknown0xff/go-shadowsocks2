@@ -90,6 +90,11 @@ func tcpLocal(addr, server string, ctx context.Context, meter stat.TrafficMeter,
 			defer rc.Close()
 			rc.(*net.TCPConn).SetKeepAlive(true)
 			rc = shadow(rc)
+			
+			recordConn := &RecordConn{
+				Conn:  rc,
+				meter: meter,
+			}
 
 			if _, err = rc.Write(tgt); err != nil {
 				logf("failed to send target address: %v", err)
@@ -97,10 +102,6 @@ func tcpLocal(addr, server string, ctx context.Context, meter stat.TrafficMeter,
 			}
 
 			logf("proxy %s <-> %s <-> %s", c.RemoteAddr(), server, tgt)
-			recordConn := &RecordConn{
-				Conn:  rc,
-				meter: meter,
-			}
 			_, _, err = relay(recordConn, c)
 			if err != nil {
 				if err, ok := err.(net.Error); ok && err.Timeout() {
