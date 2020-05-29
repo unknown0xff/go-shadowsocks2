@@ -1,4 +1,4 @@
-package api
+package ssapi
 
 import (
 	"net"

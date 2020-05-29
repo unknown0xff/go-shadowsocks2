@@ -4,7 +4,7 @@ import "C"
 import (
 	"context"
 
-	"github.com/Trojan-Qt5/go-shadowsocks2/api"
+	"github.com/Trojan-Qt5/go-shadowsocks2/ssapi"
 	"github.com/Trojan-Qt5/go-shadowsocks2/core"
 	"github.com/Trojan-Qt5/go-shadowsocks2/stat"
 )
