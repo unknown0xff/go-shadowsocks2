@@ -4,8 +4,8 @@ import "C"
 import (
 	"context"
 
-	"github.com/Trojan-Qt5/go-shadowsocks2/ssapi"
 	"github.com/Trojan-Qt5/go-shadowsocks2/core"
+	"github.com/Trojan-Qt5/go-shadowsocks2/ssapi"
 	"github.com/Trojan-Qt5/go-shadowsocks2/stat"
 )
 
@@ -36,7 +36,7 @@ func StartGoShadowsocks(ClientAddr string, ServerAddr string, Cipher string, Pas
 	meter := &stat.MemoryTrafficMeter{}
 
 	if EnableAPI {
-		go api.RunClientAPIService(ctx, APIAddress, meter)
+		go ssapi.RunClientAPIService(ctx, APIAddress, meter)
 	}
 
 	go socksLocal(ClientAddr, addr, meter, ciph.StreamConn, ctx)
