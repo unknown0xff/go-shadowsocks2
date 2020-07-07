@@ -1,4 +1,4 @@
-module github.com/Trojan-Qt5/go-shadowsocks2
+module github.com/unknown0xff/go-shadowsocks2
 
 go 1.12
 
