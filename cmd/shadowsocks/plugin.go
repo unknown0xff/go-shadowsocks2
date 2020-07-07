@@ -1,4 +1,4 @@
-package shadowsocks
+/*package shadowsocks
 
 import (
 	"fmt"
@@ -115,4 +115,4 @@ func getFreePort() (string, error) {
 	port := fmt.Sprintf("%d", l.Addr().(*net.TCPAddr).Port)
 	l.Close()
 	return port, nil
-}
+}*/

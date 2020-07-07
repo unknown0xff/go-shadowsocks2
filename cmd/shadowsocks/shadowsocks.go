@@ -5,7 +5,6 @@ import (
 	"context"
 
 	"github.com/Trojan-Qt5/go-shadowsocks2/core"
-	"github.com/Trojan-Qt5/go-shadowsocks2/ssapi"
 	"github.com/Trojan-Qt5/go-shadowsocks2/stat"
 )
 
@@ -14,7 +13,7 @@ var (
 	cancel context.CancelFunc
 )
 
-func StartGoShadowsocks(ClientAddr string, ServerAddr string, Cipher string, Password string, Plugin string, PluginOptions string, EnableAPI bool, APIAddress string) {
+func StartShadowsocks(ClientAddr string, ServerAddr string, Cipher string, Password string) {
 
 	var err error
 	addr := ServerAddr
@@ -27,25 +26,14 @@ func StartGoShadowsocks(ClientAddr string, ServerAddr string, Cipher string, Pas
 	if err != nil {
 	}
 
-	if Plugin != "" {
-		addr, err = startPlugin(Plugin, PluginOptions, addr, false)
-		if err != nil {
-		}
-	}
-
 	meter := &stat.MemoryTrafficMeter{}
-
-	if EnableAPI {
-		go ssapi.RunClientAPIService(ctx, APIAddress, meter)
-	}
 
 	go socksLocal(ClientAddr, addr, meter, ciph.StreamConn, ctx)
 	go udpSocksLocal(ClientAddr, addr, ciph.PacketConn, ctx)
 
 }
 
-func StopGoShadowsocks() {
-	killPlugin()
+func StopShadowsocks() {
 
 	cancel()
 
