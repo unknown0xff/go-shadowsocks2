@@ -1,5 +1,5 @@
-/*package shadowsocks
-
+package shadowsocks
+/*
 import (
 	"fmt"
 	"net"
